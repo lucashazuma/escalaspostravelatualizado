@@ -22,8 +22,11 @@ export default async (req) => {
   try { body = await req.json(); } catch { return json({ error: "json inválido" }, 400); }
 
   // A senha é conferida AQUI, no servidor (variável de ambiente EDIT_PASSWORD)
-  const expected = Netlify.env.get("EDIT_PASSWORD");
-  if (!expected || body.password !== expected) return json({ error: "senha incorreta" }, 401);
+  const expected = (Netlify.env.get("EDIT_PASSWORD") || "").trim();
+  if (!expected || String(body.password || "").trim() !== expected) {
+    // "configured" só diz se a variável existe (não revela a senha)
+    return json({ error: "senha incorreta", configured: !!expected }, 401);
+  }
 
   // POST = só confere a senha
   if (req.method === "POST") return json({ ok: true });
